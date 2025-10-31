@@ -3,7 +3,7 @@
 > `saeed@cloud9p.org`
 
 ## Abstract
-We present a new accelerator back-end for QEMU^[[Quick EMUlator: A Portable computer emulator](https://qemu.org)]
+We propose a new accelerator back-end for QEMU^[[Quick EMUlator: A Portable computer emulator](https://qemu.org)]
 for OpenBSD's VMM hypervisor^[[Virtual Machine Monitor](https://cvsweb.openbsd.org/src/sys/dev/vmm/)],
 which aims to improve virtualization framework in BSD systems and enable more workflows
 and use cases, specifically those related to isolation, sand-boxing and virtualization. 
