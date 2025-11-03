@@ -1,8 +1,9 @@
 # A OpenBSD VMM Accelerator Back-end for QEMU
+
+*Third draft*
+
 > Saeed Mahjoob, Shamsipour technical and vocational college
 > `saeed@cloud9p.org`
-
-*Second draft*
 
 ## Abstract
 QEMU^[[Quick EMUlator: A Portable machine emulator](https://qemu.org)]
@@ -22,7 +23,7 @@ ease of use and security gains attained by the hypervisors and virtual machines.
 
 OpenBSD operating system, while fairly well known for its security oriented
 software stack (OpenSSH, `doas`, LibreSSL and the pf firewall to name a few) have historically
-been a behind in the virtualization until the arrival of
+been behind in the virtualization until the arrival of
 [*vmm*(4)](https://openbsd.org/vmm) driver and [*vmd*(8)](https://man.openbsd.org/vmd)
 daemon in 2016. While this stack works fairly well for what it promises to offer,
 it only focuses on few specific workflows. For example it only offers
@@ -49,7 +50,7 @@ tremendous effort, as the hypervisors are generally very complex, highly tied to
 and hardware, and can cause kernel panics since they include kernel level code.
 Thus reusing existing infrastructure would get us to the goal with less effort and better results.
 
-The solution we propose is to implement an back-end which talks to
+The solution we propose is to implement a back-end which talks to
 `/dev/vmm` using *ioctl*(2) system call,
 and handles management of vCPUs^[Virtual CPUs], without the overhead of emulation
 that TCG currently suffers from, as shown in Figure 2.
@@ -62,29 +63,48 @@ There are two major changes that must be done to currently available software:
 * QEMU accelerator
 * VMM changes
 
-QEMU changes are mostly consist of add C wrappers for existing interfaces, adapting them
+QEMU changes mostly consist of add C wrappers for existing interfaces, adapting them
 to interfaces that already exists in QEMU, all of which are user-space code, dealing with
 creation, initialization, halting, and destroying a vCPU,
 as well as handling the event loop that does the input/output of the virtual machine.
 
-VMM changes on the other hand are mostly made out of enhancements to current infrastructure
+On the other hand VMM changes are mostly made out of enhancements to current infrastructure
 of OpenBSD, such as adding features that makes VMM behave more like KVM or NVMM, fixing bugs,
-and other misc changes. Unlike QEMU changes this however is made out of kernel-space code,
+and other misc changes. Unlike Changes on QEMU, these are made out of kernel-space code,
 which is less trivial and more prone to difficult to debug bugs.
 
-### QEMU accelerator
-QEMU ships with several accelerators already, some of which are:
+### Inside of a hypervisor
+Inner workings of hypervisors, are mostly similar, while details do differ.
+Figure 3 shows a simplified version of virtual machine life cycle.
+
+![Life cycle of a virtual machine](vmlifecycle.svg)
+
+At the request of user, emulator starts the virtual machine and sets up various peripherals,
+memory, bus and other hardware pieces you may think of, including CPU. But unlike the usual set,
+CPUs are not emulated^[Unless it is, but we are talking about hardware assisted virtualization],
+thus, it needs to ask the hardware itself to do the work. In doing so, we switch from
+emulator which runs in user-space, to the guest vCPU, executing instructions until some sort of special interrupts happen.
+In Intel terminology those interrupts are known as *VMExit*s, which can handle I/O requests, NMIs^[Non mask-able interrupts],
+requests to pause or shutdown the virtual machine and many other.
+
+Once a *VMExit* is issued, it is up to the hypervisor to handle it, as its not of guest's concern
+nor the emulator. Hypervisor can then propagate the interrupt to the emulator, handle it on it's
+own^[Overhead of context-switches sometimes makes this approach worth the trouble, FreeBSD does this for example for some devices],
+halt the (guest) machine (to debug it) or ignore it and resume the virtual machine.
+
+### QEMU Accelerator
+QEMU already ships with several accelerators, some of which are:
 
 * KVM
   * Linux, many platforms
 * WHPX
   * Windows, x86
 * HVF
-  * MacOS 64-bit x86 and arm
+  * MacOS, 64-bit x86 and arm
 * NVMM
-  * NetBSD, x86
+  * NetBSD, DrangonflyBSD, x86
 * TCG
-  * many operating systems and many platforms
+  * Many operating systems and many platforms
 
 For example, if compiled with NVMM accelerator:
 ```
@@ -112,10 +132,20 @@ struct CPUState {
 };
 ```
 
-## VMM Changes
-?
+Each accelerator implements two classes, `AccelClass` and `AccelOpsClass`
+## Related work and sources
+Sources of this document is available at ![Github](https://github.com/hjicks/gathesis).
 
-## Related work
-[NVMM]
-[QEMU]
-[VMM]
+### VMM
+
+- https://www.openbsd.org/papers/asiabsdcon2017-vmm-slides.pdf
+- https://www.openbsd.org/papers/asiabsdcon2016-vmm-slides.pdf
+- https://www.openbsd.org/papers/asiabsdcon2016-vmd-slides.pdf
+
+### NVMM
+
+- https://blog.netbsd.org/tnf/entry/from_zero_to_nvmm
+- https://netbsd.org/~kamil/bhyvecon_tokyo2019.html
+
+### QEMU
+- https://dumrich.github.io/GSoC25-Blog/posts/qemu-accel/
