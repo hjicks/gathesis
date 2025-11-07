@@ -5,8 +5,6 @@
 > Saeed Mahjoob, Shamsipour technical and vocational college
 > `saeed@cloud9p.org`
 
-
-[TODO: vmctl]
 ## Abstract
 QEMU^[[Quick EMUlator: A Portable machine emulator](https://qemu.org)]
 is the de-facto virtualization tool in open-source operating systems,
@@ -59,10 +57,26 @@ that TCG currently suffers from, as shown in Figure 2.
 
 ![Proposed VMM stack](qemu.svg)
 
-## Previous work
-Solo5 [] is a portable unikernel that runs portably across multiple operating systems using virtualzation backends such as KVM or VMM, without help of emulators (i.e: no vmd), which 
-[TODO: VMM]
-[TODO: NVMM]
+## Related work
+### VMM
+In 2016, Mike Larkin introduced VMM stack to OpenBSD operating system, which consisted of three parts:
+
+* VMM - Hypervisior
+* `vmd` - userspace emulator and daemon for managing VMM virtual machines
+* `vmctl` - utility to control vmd
+
+VMM stack is currently used as the only virtualization method in OpenBSD, which we will use as the
+hypervisor for our project.
+
+### Solo5
+[Solo5](https://github.com/Solo5/solo5) is a portable unikernel that runs portably across multiple operating systems using
+hypervisors such as KVM or VMM, without help of emulators (i.e: `vmd` or QEMU), which aims to
+provide a sand-boxed execution environment. Their implementation includes a minimal emulator that can work with VMM hypervisor.
+
+### NVMM
+NetBSD Virtual Machine Monitor is a type-2 hypervisor that can work with QEMU and is currently
+used in NetBSD and DragonflyBSD operating systems, their work, especially their QEMU accelerator is
+useful as an model to implement the VMM accelerator.
 
 ## Implementation
 There are two major changes that must be done to currently available software:
@@ -76,11 +90,9 @@ creation, initialization, halting, and destroying a vCPU,
 as well as handling the event loop that does the input/output of the virtual machine.
 
 On the other hand VMM changes are mostly made out of enhancements to current infrastructure
-of OpenBSD, such as adding features that makes VMM behave more like KVM or NVMM, fixing bugs,
-and other misc changes. Unlike Changes on QEMU, these are made out of kernel-space code,
+of OpenBSD, such as adding features that makes VMM behave more like KVM or NVMM, adding support for APIC,
+fixing bugs, and other misc changes. Unlike Changes on QEMU, these are made out of kernel-space code,
 which is less trivial and more prone to difficult to debug bugs.
-
-[TODO: LAPIC]
 
 ### Inside of a hypervisor
 Inner workings of hypervisors, are mostly similar, while details do differ.
@@ -169,11 +181,11 @@ struct CPUState {
 };
 ```
 
-Each accelerator implements two classes, `AccelClass` and `AccelOpsClass`.
-<TODO>
+Each accelerator implements two classes, `AccelClass` and `AccelOpsClass`, the first one includes
+accelerator's internal state, and the second is operations it offers to QEMU.
 
-## Related work and sources
-Sources of this document is available at ![Github](https://github.com/hjicks/gathesis).
+## Sources
+Sources of this document is available at [Github](https://github.com/hjicks/gathesis).
 
 ### Wikipedia
 - https://en.wikipedia.org/wiki/Popek_and_Goldberg_virtualization_requirements
