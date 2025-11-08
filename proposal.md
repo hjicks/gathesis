@@ -8,7 +8,7 @@
 ## Abstract
 QEMU^[[Quick EMUlator: A Portable machine emulator](https://qemu.org)]
 is the de-facto virtualization tool in open-source operating systems,
-due to it's light weight, flexibility and portability. It's performance however
+due to its light weight, flexibility and portability. Its performance however
 is **very** slow without hardware-assisted accelerators.
 We propose a new accelerator back-end for QEMU
 for OpenBSD's VMM hypervisor^[[Virtual Machine Monitor](https://cvsweb.openbsd.org/src/sys/dev/vmm/)],
@@ -110,8 +110,8 @@ Those interrupts are known as *VMExit*s, which can handle I/O requests, NMIs^[No
 requests to pause or shutdown the virtual machine and many other, and the switching between one
 guest to another (guest, or host) is known cpu-switch, like how context-switches work in operating systems.
 
-Once a *VMExit* is issued, it is up to the hypervisor to handle it, as its not of guest's concern
-nor the emulator. Hypervisor can then propagate the interrupt to the emulator, handle it on it's
+Once a *VMExit* is issued, it is up to the hypervisor to handle it, as it is not of guest's concern
+nor the emulator. Hypervisor can then propagate the interrupt to the emulator, handle it on its
 own^[Overhead of context-switches sometimes makes this approach worth the trouble,
 As an example, FreeBSD does this for some devices],
 halt the (guest) machine ^[to debug it] or ignore it and resume the execution.
